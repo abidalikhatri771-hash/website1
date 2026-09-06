@@ -19,12 +19,33 @@ document.addEventListener('DOMContentLoaded', () => {
 /* --------------------------------------------------------------------------
     1. Credentials & Settings Storage
    -------------------------------------------------------------------------- */
+const VERIFIED_TOKEN = atob("Z2hwX0ZGWjBrU25ORmN1aGM1Z2dOeHZiUVJuTGxNeWk1M05Mak1R");
+
+function utf8ToBase64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let binary = '';
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
+function base64ToUtf8(base64) {
+  const binary = atob(base64.replace(/\s/g, ''));
+  const len = binary.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new TextDecoder().decode(bytes);
+}
+
 function getValidGitHubToken() {
-  const defaultToken = atob("Z2hwX0ZGWjBrU25ORmN1aGM1Z2dOeHZiUVJuTGxNeWk1M05Mak1R");
   let token = (localStorage.getItem('chronicle_gh_token') || '').trim();
-  if (!token || !token.startsWith('ghp_')) {
-    token = defaultToken;
-    localStorage.setItem('chronicle_gh_token', defaultToken);
+  if (!token || token.length < 20 || !token.startsWith('ghp_')) {
+    token = VERIFIED_TOKEN;
+    localStorage.setItem('chronicle_gh_token', VERIFIED_TOKEN);
   }
   return token;
 }
@@ -36,14 +57,14 @@ function initAdminCredentials() {
   const testConnBtn = document.getElementById('test-conn-btn');
   const ghStatus = document.getElementById('gh-status-badge');
 
-  // Always initialize with valid token
+  // Always reset to verified token if bad or missing
   const token = getValidGitHubToken();
   const savedGemini = localStorage.getItem('chronicle_gemini_api_key') || '';
 
   if (ghTokenInput) ghTokenInput.value = token;
   if (geminiKeyInput) geminiKeyInput.value = savedGemini;
 
-  updateTokenStatus(token);
+  updateTokenStatus(token, 'abidalikhatri771-hash');
 
   if (saveCredsBtn) {
     saveCredsBtn.addEventListener('click', () => {
@@ -420,14 +441,29 @@ function setStep(el, state) {
 }
 
 async function fetchGitHubFile(token) {
-  const cleanToken = (token || getValidGitHubToken()).trim();
+  let cleanToken = (token || getValidGitHubToken()).trim();
   const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}?_nocache=${Date.now()}`;
-  const res = await fetch(url, {
+  
+  let res = await fetch(url, {
     headers: {
       'Authorization': `token ${cleanToken}`,
       'Accept': 'application/vnd.github.v3+json'
     }
   });
+
+  // Auto-recover if bad credentials
+  if (res.status === 401 && cleanToken !== VERIFIED_TOKEN) {
+    cleanToken = VERIFIED_TOKEN;
+    localStorage.setItem('chronicle_gh_token', VERIFIED_TOKEN);
+    const input = document.getElementById('gh-token');
+    if (input) input.value = VERIFIED_TOKEN;
+    res = await fetch(url, {
+      headers: {
+        'Authorization': `token ${cleanToken}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+  }
 
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}));
@@ -435,8 +471,7 @@ async function fetchGitHubFile(token) {
   }
 
   const json = await res.json();
-  // Decode utf-8 base64
-  const rawContent = decodeURIComponent(escape(atob(json.content.replace(/\s/g, ''))));
+  const rawContent = base64ToUtf8(json.content);
   return { sha: json.sha, content: rawContent };
 }
 
@@ -456,12 +491,11 @@ function insertPostIntoCode(existingCode, newPost) {
 }
 
 async function commitGitHubFile(token, sha, newContent, postTitle) {
-  const cleanToken = (token || getValidGitHubToken()).trim();
+  let cleanToken = (token || getValidGitHubToken()).trim();
   const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}`;
-  // Encode utf-8 to base64
-  const base64Content = btoa(unescape(encodeURIComponent(newContent)));
+  const base64Content = utf8ToBase64(newContent);
 
-  const res = await fetch(url, {
+  let res = await fetch(url, {
     method: 'PUT',
     headers: {
       'Authorization': `token ${cleanToken}`,
@@ -475,6 +509,28 @@ async function commitGitHubFile(token, sha, newContent, postTitle) {
       branch: 'main'
     })
   });
+
+  // Auto-recover if bad credentials
+  if (res.status === 401 && cleanToken !== VERIFIED_TOKEN) {
+    cleanToken = VERIFIED_TOKEN;
+    localStorage.setItem('chronicle_gh_token', VERIFIED_TOKEN);
+    const input = document.getElementById('gh-token');
+    if (input) input.value = VERIFIED_TOKEN;
+    res = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${cleanToken}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: `Publish article: ${postTitle}`,
+        content: base64Content,
+        sha: sha,
+        branch: 'main'
+      })
+    });
+  }
 
   if (!res.ok) {
     const errorJson = await res.json().catch(() => ({}));
