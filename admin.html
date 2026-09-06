@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Studio & Auto-Publishing — Chronicle</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- Admin Header -->
+  <header class="admin-header">
+    <div class="container admin-header-inner">
+      <div style="display: flex; align-items: center;">
+        <a href="index.html" class="site-logo">
+          <span class="logo-badge">C</span>
+          <span>Chronicle</span>
+        </a>
+        <span class="admin-badge">Studio</span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <a href="https://website-beta-sable-95.vercel.app" target="_blank" class="btn-secondary" style="padding: 0.45rem 1rem; font-size: 0.875rem;">
+          <span>View Live Vercel Site</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+        </a>
+
+        <button id="theme-toggle" class="icon-btn" title="Toggle light/dark theme" aria-label="Toggle theme">
+          <span class="theme-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Top Settings Card -->
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <h2 class="admin-card-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          <span>Deployment & API Settings</span>
+        </h2>
+        <span id="gh-status-badge" class="status-pill ready">● GitHub Connected</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="gh-token" class="form-label">GitHub Personal Access Token (for auto-commit)</label>
+          <input type="password" id="gh-token" class="form-input" placeholder="ghp_..." />
+          <small style="color: var(--text-muted); font-size: 0.775rem;">Repo: <code>abidalikhatri771-hash/website1</code> (Saved securely in your browser)</small>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="gemini-key" class="form-label">Gemini API Key (Optional for Custom AI)</label>
+          <input type="password" id="gemini-key" class="form-input" placeholder="AIzaSy... (Leave empty to use built-in generator)" />
+          <small style="color: var(--text-muted); font-size: 0.775rem;">Optional. If left blank, our intelligent built-in generator is used.</small>
+        </div>
+      </div>
+
+      <div style="margin-top: 1.25rem; display: flex; justify-content: flex-end;">
+        <button id="save-creds-btn" class="btn-secondary" style="padding: 0.5rem 1.2rem; font-size: 0.85rem;">Save Settings</button>
+      </div>
+    </div>
+
+    <!-- Main Workspace Grid -->
+    <div class="admin-grid">
+      <!-- Left Column: Generator Controls -->
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <h2 class="admin-card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            <span>Auto Article Generator</span>
+          </h2>
+        </div>
+
+        <div class="form-group">
+          <label for="keyword-input" class="form-label">Keyword or Topic</label>
+          <input type="text" id="keyword-input" class="form-input" placeholder="e.g. Future of Quantum Computing, Healthy Morning Habits..." />
+        </div>
+
+        <!-- Quick Suggestion Chips -->
+        <div style="margin-bottom: 1.5rem;">
+          <label class="form-label" style="font-size: 0.8rem;">Quick Topic Ideas:</label>
+          <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+            <button class="tag-badge" onclick="document.getElementById('keyword-input').value='Next-Gen Artificial Intelligence'; document.getElementById('category-select').value='technology';">AI Breakthroughs</button>
+            <button class="tag-badge" onclick="document.getElementById('keyword-input').value='Modern Mindful Living'; document.getElementById('category-select').value='lifestyle';">Mindful Habits</button>
+            <button class="tag-badge" onclick="document.getElementById('keyword-input').value='Secret European Hiking Trails'; document.getElementById('category-select').value='travel';">Hidden Travel</button>
+            <button class="tag-badge" onclick="document.getElementById('keyword-input').value='Neuroscience of High Performance'; document.getElementById('category-select').value='science';">Brain Science</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="category-select" class="form-label">Category</label>
+          <select id="category-select" class="form-input">
+            <option value="technology">Technology & Innovation</option>
+            <option value="lifestyle">Lifestyle & Wellness</option>
+            <option value="travel">Travel & Adventure</option>
+            <option value="science">Science & Health</option>
+            <option value="culture">Culture & Design</option>
+          </select>
+        </div>
+
+        <button id="generate-btn" class="btn-primary" style="width: 100%; margin-top: 1rem;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+          <span>Generate Article</span>
+        </button>
+      </div>
+
+      <!-- Right Column: Live Preview & Publish Pipeline -->
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <h2 class="admin-card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            <span>Article Preview & Deployment</span>
+          </h2>
+          <span id="preview-category" class="category-badge" style="margin: 0;">Technology</span>
+        </div>
+
+        <div id="article-preview" class="article-preview-box">
+          <img id="preview-cover" class="preview-cover-thumb" src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&auto=format&fit=crop&q=80" alt="Preview cover" />
+          <h3 id="preview-title" style="font-size: 1.3rem; margin-bottom: 0.5rem;">Enter a keyword on the left to generate an article</h3>
+          <p id="preview-excerpt" style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1rem;">Once generated, your complete post structure, prose, headings, and takeaways will appear here for review.</p>
+          <div id="preview-body" class="article-prose" style="font-size: 0.95rem;"></div>
+        </div>
+
+        <!-- Progress Stepper -->
+        <div id="publish-stepper" class="stepper-container" style="display: none;">
+          <div id="step-1" class="step-item">
+            <span class="step-icon">○</span>
+            <span>Step 1: Validating Article & Metadata</span>
+          </div>
+          <div id="step-2" class="step-item">
+            <span class="step-icon">○</span>
+            <span>Step 2: Connecting to GitHub Repository API</span>
+          </div>
+          <div id="step-3" class="step-item">
+            <span class="step-icon">○</span>
+            <span>Step 3: Committing new article to <code>main</code> branch</span>
+          </div>
+          <div id="step-4" class="step-item">
+            <span class="step-icon">○</span>
+            <span>Step 4: Vercel Auto-Deploy triggered!</span>
+          </div>
+        </div>
+
+        <!-- Success Result Card -->
+        <div id="deploy-success-card" class="deploy-success-card">
+          <div style="display: flex; align-items: center; gap: 0.6rem; color: var(--success); font-weight: 700; margin-bottom: 0.5rem;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <span>Article Published & Deployed!</span>
+          </div>
+          <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">
+            Your article has been committed to GitHub. Vercel is now automatically deploying the live build (takes ~15-30 seconds).
+          </p>
+          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <a id="view-post-link" href="#" target="_blank" class="btn-primary" style="font-size: 0.85rem; padding: 0.5rem 1rem;">
+              <span>View Article Live ↗</span>
+            </a>
+            <a id="vercel-inspect-link" href="https://vercel.com/abid-1486/website" target="_blank" class="btn-secondary" style="font-size: 0.85rem; padding: 0.5rem 1rem;">
+              <span>Inspect on Vercel ↗</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Publish Action Button -->
+        <div style="margin-top: 1.5rem;">
+          <button id="publish-btn" class="btn-secondary" style="width: 100%; font-size: 1rem; padding: 0.85rem;" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <span>Publish to Website & Auto-Deploy to Vercel</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Existing Published Posts Table -->
+    <div class="admin-card" style="margin-bottom: 4rem;">
+      <div class="admin-card-header">
+        <h2 class="admin-card-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          <span>All Published Articles</span>
+        </h2>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table class="posts-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Category</th>
+              <th>Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="posts-table-body">
+            <!-- Populated by admin.js -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-bottom">
+        <p>© 2026 Chronicle Studio. Connected to <code>abidalikhatri771-hash/website1</code> on Vercel.</p>
+        <p><a href="index.html" style="color: var(--accent); font-weight: 500;">← Go to Public Website</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/posts-data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
