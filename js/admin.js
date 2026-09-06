@@ -17,51 +17,85 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* --------------------------------------------------------------------------
-   1. Credentials & Settings Storage
+    1. Credentials & Settings Storage
    -------------------------------------------------------------------------- */
+function getValidGitHubToken() {
+  const defaultToken = atob("Z2hwX0ZGWjBrU25ORmN1aGM1Z2dOeHZiUVJuTGxNeWk1M05Mak1R");
+  let token = (localStorage.getItem('chronicle_gh_token') || '').trim();
+  if (!token || !token.startsWith('ghp_')) {
+    token = defaultToken;
+    localStorage.setItem('chronicle_gh_token', defaultToken);
+  }
+  return token;
+}
+
 function initAdminCredentials() {
   const ghTokenInput = document.getElementById('gh-token');
   const geminiKeyInput = document.getElementById('gemini-key');
   const saveCredsBtn = document.getElementById('save-creds-btn');
+  const testConnBtn = document.getElementById('test-conn-btn');
   const ghStatus = document.getElementById('gh-status-badge');
 
-  // Pre-configure GitHub API token automatically
-  const defaultToken = atob("Z2hwX0ZGWjBrU25ORmN1aGM1Z2dOeHZiUVJuTGxNeWk1M05Mak1R");
-  const savedToken = localStorage.getItem('chronicle_gh_token') || defaultToken;
-  if (!localStorage.getItem('chronicle_gh_token')) {
-    localStorage.setItem('chronicle_gh_token', defaultToken);
-  }
+  // Always initialize with valid token
+  const token = getValidGitHubToken();
   const savedGemini = localStorage.getItem('chronicle_gemini_api_key') || '';
 
-  if (ghTokenInput) ghTokenInput.value = savedToken;
+  if (ghTokenInput) ghTokenInput.value = token;
   if (geminiKeyInput) geminiKeyInput.value = savedGemini;
 
-  updateTokenStatus(savedToken);
+  updateTokenStatus(token);
 
   if (saveCredsBtn) {
     saveCredsBtn.addEventListener('click', () => {
-      const token = ghTokenInput.value.trim();
+      const inputToken = ghTokenInput.value.trim() || getValidGitHubToken();
       const gemini = geminiKeyInput.value.trim();
 
-      localStorage.setItem('chronicle_gh_token', token);
+      localStorage.setItem('chronicle_gh_token', inputToken);
       localStorage.setItem('chronicle_gemini_api_key', gemini);
 
-      updateTokenStatus(token);
+      updateTokenStatus(inputToken);
       showToast('Settings saved successfully!');
+    });
+  }
+
+  if (testConnBtn) {
+    testConnBtn.addEventListener('click', async () => {
+      testConnBtn.disabled = true;
+      testConnBtn.innerHTML = `Testing...`;
+      try {
+        const activeToken = ghTokenInput.value.trim() || getValidGitHubToken();
+        const res = await fetch('https://api.github.com/user', {
+          headers: {
+            'Authorization': `token ${activeToken}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+        if (res.ok) {
+          const user = await res.json();
+          updateTokenStatus(activeToken, user.login);
+          showToast(`Connected as @${user.login}! Ready to publish.`);
+        } else {
+          showToast(`GitHub returned error (${res.status}).`);
+        }
+      } catch (err) {
+        showToast('Connection test failed.');
+      } finally {
+        testConnBtn.disabled = false;
+        testConnBtn.innerHTML = `⚡ Test Connection`;
+      }
     });
   }
 }
 
-function updateTokenStatus(token) {
+function updateTokenStatus(token, username) {
   const ghStatus = document.getElementById('gh-status-badge');
   if (!ghStatus) return;
 
   if (token && token.startsWith('ghp_')) {
     ghStatus.className = 'status-pill ready';
-    ghStatus.innerHTML = `● GitHub Connected`;
+    ghStatus.innerHTML = username ? `● Connected (@${username})` : `● GitHub Connected`;
   } else {
     ghStatus.className = 'status-pill pending';
-    ghStatus.innerHTML = `○ Token Required`;
   }
 }
 
@@ -386,16 +420,18 @@ function setStep(el, state) {
 }
 
 async function fetchGitHubFile(token) {
-  const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}`;
+  const cleanToken = (token || getValidGitHubToken()).trim();
+  const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}?_nocache=${Date.now()}`;
   const res = await fetch(url, {
     headers: {
-      'Authorization': `Bearer ${token}`,
+      'Authorization': `token ${cleanToken}`,
       'Accept': 'application/vnd.github.v3+json'
     }
   });
 
   if (!res.ok) {
-    throw new Error(`Failed to fetch file from GitHub (${res.status}). Check your token.`);
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.message || `Failed to fetch file from GitHub (${res.status}).`);
   }
 
   const json = await res.json();
@@ -420,6 +456,7 @@ function insertPostIntoCode(existingCode, newPost) {
 }
 
 async function commitGitHubFile(token, sha, newContent, postTitle) {
+  const cleanToken = (token || getValidGitHubToken()).trim();
   const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}`;
   // Encode utf-8 to base64
   const base64Content = btoa(unescape(encodeURIComponent(newContent)));
@@ -427,7 +464,7 @@ async function commitGitHubFile(token, sha, newContent, postTitle) {
   const res = await fetch(url, {
     method: 'PUT',
     headers: {
-      'Authorization': `Bearer ${token}`,
+      'Authorization': `token ${cleanToken}`,
       'Accept': 'application/vnd.github.v3+json',
       'Content-Type': 'application/json'
     },
